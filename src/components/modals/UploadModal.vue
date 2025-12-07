@@ -17,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
 import { useDeskStore } from '@/stores/desks/desk';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
@@ -26,39 +25,10 @@ const emit = defineEmits<{
 }>()
 
 const deskStore = useDeskStore();
-const { desks } = storeToRefs(deskStore);
+const { exportToJSON } = deskStore;
 
 const exportData = () => {
-  const exportData = Object.values(desks.value).map(desk => ({
-    board: {
-      id: desk.id,
-      title: desk.name
-    },
-    columns: desk.columnOrder
-      .map(columnId => desk.columns[columnId])
-      .filter(column => column !== undefined)
-      .map(column => ({
-        color: column.color,
-        items: column.taskOrder
-          .map(taskId => column.tasks[taskId])
-          .filter(task => task !== undefined)
-          .map(task => ({
-            status: {
-              title: column.name,
-              id: column.id
-            },
-            title: task.title,
-            description: task.description,
-            id: task.id
-          })),
-        status: {
-          title: column.name,
-          id: column.id
-        }
-      }))
-  }));
-
-  const jsonString = JSON.stringify(exportData);
+  const jsonString = JSON.stringify(exportToJSON());
   const blob = new Blob([jsonString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 

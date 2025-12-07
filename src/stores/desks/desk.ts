@@ -104,6 +104,25 @@ export const useDeskStore = defineStore('desk', () => {
     }
   }
 
+  const exportToJSON = () => {
+    return Object.values(desks.value).map(desk => ({
+      board: { id: desk.id, title: desk.name },
+      columns: desk.columnOrder.flatMap(columnId => {
+        const column = desk.columns[columnId]
+        if (!column) return []
+        
+        return [{
+          color: column.color,
+          status: { title: column.name, id: column.id },
+          items: column.taskOrder.flatMap(taskId => {
+            const task = column.tasks[taskId]
+            return task ? [{ ...task, status: { title: column.name, id: column.id } }] : []
+          })
+        }]
+      })
+    }))
+  }
+
   const clearAll = () => {
     desks.value = {}
     activeDeskId.value = null
@@ -121,6 +140,7 @@ export const useDeskStore = defineStore('desk', () => {
     addTask,
     moveTask,
     editTask,
+    exportToJSON,
     clearAll
   }
 })
