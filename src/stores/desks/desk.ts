@@ -2,6 +2,15 @@ import { ref, watch, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { Desk } from './types'
 
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
+
+const saveToLocalStorage = (desks: Record<string, Desk>) => {
+  if (saveTimeout) clearTimeout(saveTimeout)
+  saveTimeout = setTimeout(() => {
+    localStorage.setItem('desks', JSON.stringify(desks))
+  }, 300)
+}
+
 export const useDeskStore = defineStore('desk', () => {
   const desks = ref<Record<string, Desk>>(JSON.parse(localStorage.getItem('desks') || '{}'))
   const activeDeskId = ref<string | null>(localStorage.getItem('activeDeskId') || null)
@@ -9,7 +18,7 @@ export const useDeskStore = defineStore('desk', () => {
   const activeDesk = computed(() => activeDeskId.value ? desks.value[activeDeskId.value] : null)
 
   watch(desks, (newValue) => {
-    localStorage.setItem('desks', JSON.stringify(newValue))
+    saveToLocalStorage(newValue)
   }, { deep: true })
 
   watch(activeDeskId, (newValue) => {

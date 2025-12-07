@@ -6,8 +6,8 @@
     <div v-else class="columns">
       <div v-for="column in deskColumns" :key="column.id" class="column">
         <h3 class="column-header">
-          <span class="column-dot" :style="{ backgroundColor: column?.color }"></span>
-          {{ column?.name }}
+          <span class="column-dot" :style="{ backgroundColor: column.color }"></span>
+          {{ column.name }}
         </h3>
         <draggable :model-value="getTasksByColumn(column.id)"
           @update:model-value="(newTasks: Task[]) => updateColumnTasks(column.id, newTasks)" group="tasks" item-key="id"
@@ -60,7 +60,7 @@ const deskColumns = computed(() => {
 const getTasksByColumn = (columnId: string) => {
   if (!activeDesk.value) return [];
   const column = activeDesk.value.columns[columnId];
-  return column ? column.taskOrder.map(id => column.tasks[id]) : [];
+  return column ? column.taskOrder.map(id => column.tasks[id]).filter(Boolean) : [];
 };
 
 const updateColumnTasks = (columnId: string, newTasks: Task[]) => {
