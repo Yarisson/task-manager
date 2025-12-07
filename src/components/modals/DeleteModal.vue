@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { useDeskStore } from '@/stores/desk';
+import { useDeskStore } from '@/stores/desks/desk';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
 const props = defineProps<{

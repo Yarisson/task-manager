@@ -19,9 +19,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useDeskStore } from '@/stores/desk';
-import { useColumnStore } from '@/stores/column';
-import { useTaskStore } from '@/stores/task';
+import { useDeskStore } from '@/stores/desks/desk';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
 const emit = defineEmits<{
@@ -31,13 +29,7 @@ const emit = defineEmits<{
 const fileInput = ref<HTMLInputElement>();
 
 const deskStore = useDeskStore();
-const { addDesk, clearAll: clearDesks } = deskStore;
-
-const columnStore = useColumnStore();
-const { addColumn, clearAll: clearColumns } = columnStore;
-
-const taskStore = useTaskStore();
-const { addTask, clearAll: clearTasks } = taskStore;
+const { addDesk, addColumn, addTask, clearAll } = deskStore;
 
 const selectFile = () => {
   fileInput.value?.click();
@@ -78,19 +70,17 @@ interface ImportBoard {
 }
 
 const importData = (data: ImportBoard[]) => {
-  clearTasks()
-  clearColumns()
-  clearDesks()
+  clearAll()
 
   data.forEach(boardData => {
     const deskId = addDesk(boardData.board.title);
 
     boardData.columns.forEach((columnData) => {
       if (columnData.status.title !== '+ New Column') {
-        const columnId = addColumn(columnData.status.title, deskId);
+        const columnId = addColumn(deskId, columnData.status.title);
 
         columnData.items.forEach((item) => {
-          addTask(item.title, item.description, columnId);
+          addTask(deskId, columnId, item.title, item.description);
         });
       }
     });

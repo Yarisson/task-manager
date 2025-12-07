@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useColumnStore } from '@/stores/column';
+import { useDeskStore } from '@/stores/desks/desk';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
 const props = defineProps<{
@@ -33,11 +33,11 @@ const emit = defineEmits<{
 }>()
 
 const name = ref('')
-const { addColumn } = useColumnStore()
+const { addColumn } = useDeskStore()
 
 const createColumn = () => {
   if (name.value.trim()) {
-    addColumn(name.value.trim(), props.deskId)
+    addColumn(props.deskId, name.value.trim())
     emit('close')
   }
 }

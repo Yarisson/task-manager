@@ -6,7 +6,7 @@
     <div class="sidebar__list">
       <h3 class="sidebar__title">All boards ({{ deskList.length }})</h3>
       <button v-for="desk in deskList" :key="desk.id" class="sidebar__item"
-        :class="{ 'sidebar__item--active': activeDesk?.id === desk.id }" @click="setActiveDesk(desk)">
+        :class="{ 'sidebar__item--active': activeDeskId === desk.id }" @click="setActiveDesk(desk.id)">
         <TableIcon />
         <span>{{ desk.name }}</span>
       </button>
@@ -26,10 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+defineOptions({ name: 'AppSidebar' });
+
+import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import CreateDesk from '@/components/modals/CreateDesk.vue';
-import { useDeskStore } from '@/stores/desk';
+import { useDeskStore } from '@/stores/desks/desk';
 import TableIcon from '@/components/icons/TableIcon.vue';
 import AnaliticsIcon from '@/components/icons/AnaliticsIcon.vue';
 import SunIcon from '@/components/icons/SunIcon.vue';
@@ -37,8 +39,10 @@ import MoonIcon from '@/components/icons/MoonIcon.vue';
 
 const openModal = ref(false);
 const deskStore = useDeskStore();
-const { deskList, activeDesk } = storeToRefs(deskStore);
+const { desks, activeDeskId } = storeToRefs(deskStore);
 const { setActiveDesk } = deskStore;
+
+const deskList = computed(() => Object.values(desks.value));
 
 const isDark = ref(false);
 

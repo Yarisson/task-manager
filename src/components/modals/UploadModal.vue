@@ -18,9 +18,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { useDeskStore } from '@/stores/desk';
-import { useColumnStore } from '@/stores/column';
-import { useTaskStore } from '@/stores/task';
+import { useDeskStore } from '@/stores/desks/desk';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
 const emit = defineEmits<{
@@ -28,26 +26,22 @@ const emit = defineEmits<{
 }>()
 
 const deskStore = useDeskStore();
-const { deskList } = storeToRefs(deskStore);
-
-const columnStore = useColumnStore();
-const { columns } = storeToRefs(columnStore);
-
-const taskStore = useTaskStore();
-const { tasks } = storeToRefs(taskStore);
+const { desks } = storeToRefs(deskStore);
 
 const exportData = () => {
-  const exportData = deskList.value.map(desk => ({
+  const exportData = Object.values(desks.value).map(desk => ({
     board: {
       id: desk.id,
       title: desk.name
     },
-    columns: columns.value
-      .filter(column => column.deskId === desk.id)
+    columns: desk.columnOrder
+      .map(columnId => desk.columns[columnId])
+      .filter(column => column !== undefined)
       .map(column => ({
         color: column.color,
-        items: tasks.value
-          .filter(task => task.columnId === column.id)
+        items: column.taskOrder
+          .map(taskId => column.tasks[taskId])
+          .filter(task => task !== undefined)
           .map(task => ({
             status: {
               title: column.name,

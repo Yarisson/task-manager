@@ -32,12 +32,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useTaskStore, type Task } from '@/stores/task';
-import type { Column } from '@/stores/column';
+import type { Task, Column } from '@/stores/desks/types';
+import { useDeskStore } from '@/stores/desks/desk';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
 const props = defineProps<{
   task: Task
+  deskId: string
+  columnId: string
   columns: Column[]
 }>()
 
@@ -47,13 +49,18 @@ const emit = defineEmits<{
 
 const title = ref(props.task.title)
 const description = ref(props.task.description)
-const selectedColumnId = ref(props.task.columnId)
+const selectedColumnId = ref(props.columnId)
 
-const { editTask } = useTaskStore()
+const { editTask, moveTask } = useDeskStore()
 
 const updateTask = () => {
   if (title.value.trim() && selectedColumnId.value) {
-    editTask(props.task.id, title.value.trim(), description.value.trim(), selectedColumnId.value)
+    editTask(props.deskId, selectedColumnId.value, props.task.id, title.value.trim(), description.value.trim())
+
+    if (selectedColumnId.value !== props.columnId) {
+      moveTask(props.deskId, props.task.id, props.columnId, selectedColumnId.value)
+    }
+
     emit('close')
   }
 }

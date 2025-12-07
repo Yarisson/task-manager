@@ -22,12 +22,15 @@
   <DownloadModal v-if="openModalDownload" @close="openModalDownload = false" />
   <EditModal v-if="openModalEdit && activeDesk" :desk="activeDesk" @close="openModalEdit = false" />
   <UploadModal v-if="openModalUpload" @close="openModalUpload = false" />
-  <CreateTask v-if="openTaskModal && activeDesk" :columns="deskColumns" @close="openTaskModal = false" />
+  <CreateTask v-if="openTaskModal && activeDeskId" :deskId="activeDeskId" :columns="deskColumns" @close="openTaskModal = false" />
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'AppHeader' });
+
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
+import type { Column } from '@/stores/desks/types';
 
 import DownloadIcon from '@/components/icons/DownloadIcon.vue';
 import EditIcon from '@/components/icons/EditIcon.vue';
@@ -38,18 +41,18 @@ import DownloadModal from '@/components/modals/DownloadModal.vue';
 import EditModal from '@/components/modals/EditModal.vue';
 import UploadModal from '@/components/modals/UploadModal.vue';
 import CreateTask from '@/components/modals/CreateTask.vue';
-import { useDeskStore } from '@/stores/desk';
-import { useColumnStore } from '@/stores/column';
+import { useDeskStore } from '@/stores/desks/desk';
 
 const deskStore = useDeskStore();
-const { deskList, activeDesk } = storeToRefs(deskStore);
+const { desks, activeDesk, activeDeskId } = storeToRefs(deskStore);
 
-const columnStore = useColumnStore();
-const { columns } = storeToRefs(columnStore);
+const deskList = computed(() => Object.values(desks.value));
 
 const deskColumns = computed(() => {
   if (!activeDesk.value) return [];
-  return columns.value.filter(column => column.deskId === activeDesk.value!.id);
+  return activeDesk.value.columnOrder
+    .map(id => activeDesk.value!.columns[id])
+    .filter((col): col is Column => col !== undefined);
 });
 
 const openModalEdit = ref(false);

@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { useDeskStore } from '@/stores/desk';
+import { useDeskStore } from '@/stores/desks/desk';
 import { ref } from 'vue';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
