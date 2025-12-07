@@ -33,11 +33,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useTaskStore } from '@/stores/task';
-import type { Column } from '@/stores/column';
+import type { Column } from '@/stores/desks/types';
+import { useDeskStore } from '@/stores/desks/desk';
 import CloseIcon from '@/components/icons/CloseIcon.vue';
 
-defineProps<{
+const props = defineProps<{
+  deskId: string
   columns: Column[]
 }>()
 
@@ -49,11 +50,11 @@ const title = ref('')
 const description = ref('')
 const selectedColumnId = ref('')
 
-const { addTask } = useTaskStore()
+const { addTask } = useDeskStore()
 
 const createTask = () => {
   if (title.value.trim() && selectedColumnId.value) {
-    addTask(title.value.trim(), description.value.trim(), selectedColumnId.value)
+    addTask(props.deskId, selectedColumnId.value, title.value.trim(), description.value.trim())
     emit('close')
   }
 }

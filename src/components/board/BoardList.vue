@@ -6,14 +6,14 @@
     <div v-else class="columns">
       <div v-for="column in deskColumns" :key="column.id" class="column">
         <h3 class="column-header">
-          <span class="column-dot" :style="{ backgroundColor: column.color }"></span>
-          {{ column.name }}
+          <span class="column-dot" :style="{ backgroundColor: column?.color }"></span>
+          {{ column?.name }}
         </h3>
         <draggable :model-value="getTasksByColumn(column.id)"
           @update:model-value="(newTasks: Task[]) => updateColumnTasks(column.id, newTasks)" group="tasks" item-key="id"
           class="tasks">
           <template #item="{ element }">
-            <div class="task" @click="openEditTask(element)">
+            <div class="task" @click="openEditTask(element, column.id)">
               <h4>{{ element.title }}</h4>
               <p v-if="element.description">{{ element.description }}</p>
             </div>
@@ -25,8 +25,8 @@
       </button>
     </div>
   </div>
-  <CreateColumn v-if="openModal && activeDesk" :deskId="activeDesk.id" @close="openModal = false" />
-  <EditTask v-if="editTaskModal && selectedTask" :task="selectedTask" :columns="deskColumns" @close="closeEditTask" />
+  <CreateColumn v-if="openModal && activeDeskId" :deskId="activeDeskId" @close="openModal = false" />
+  <EditTask v-if="editTaskModal && selectedTask && activeDeskId" :task="selectedTask" :columnId="selectedColumnId" :deskId="activeDeskId" :columns="deskColumns" @close="closeEditTask" />
 
 </template>
 
@@ -34,51 +34,59 @@
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import draggable from 'vuedraggable';
-import { useDeskStore } from '@/stores/desk';
-import { useColumnStore } from '@/stores/column';
-import { useTaskStore, type Task } from '@/stores/task';
+import type { Task, Column } from '@/stores/desks/types';
+import { useDeskStore } from '@/stores/desks/desk';
 import CreateColumn from '@/components/modals/CreateColumn.vue';
 import EditTask from '@/components/modals/EditTask.vue';
 
 const openModal = ref(false);
 const editTaskModal = ref(false);
 const selectedTask = ref<Task | null>(null);
+const selectedColumnId = ref<string>('');
 
 const deskStore = useDeskStore();
-const { activeDesk } = storeToRefs(deskStore);
-
-const columnStore = useColumnStore();
-const { columns } = storeToRefs(columnStore);
+const { activeDesk, activeDeskId } = storeToRefs(deskStore);
+const { moveTask } = deskStore;
 
 const deskColumns = computed(() => {
-  if (!activeDesk.value) return [];
-  return columns.value.filter(column => column.deskId === activeDesk.value!.id);
+  const desk = activeDesk.value;
+  if (!desk || !desk.columnOrder) return [];
+
+  return desk.columnOrder
+    .map(id => desk.columns[id])
+    .filter((col): col is Column => col !== undefined);
 });
 
-const taskStore = useTaskStore();
-const { tasks } = storeToRefs(taskStore);
-const { moveTask } = useTaskStore();
-
 const getTasksByColumn = (columnId: string) => {
-  return tasks.value.filter(task => task.columnId === columnId);
+  if (!activeDesk.value) return [];
+  const column = activeDesk.value.columns[columnId];
+  return column ? column.taskOrder.map(id => column.tasks[id]) : [];
 };
 
 const updateColumnTasks = (columnId: string, newTasks: Task[]) => {
-  newTasks.forEach(task => {
-    if (task.columnId !== columnId) {
-      moveTask(task.id, columnId);
+  if (!activeDeskId.value) return;
+
+  newTasks.forEach((task) => {
+    const currentColumn = Object.values(activeDesk.value!.columns).find(col =>
+      col.tasks[task.id]
+    );
+
+    if (currentColumn && currentColumn.id !== columnId) {
+      moveTask(activeDeskId.value!, task.id, currentColumn.id, columnId);
     }
   });
 };
 
-const openEditTask = (task: Task) => {
+const openEditTask = (task: Task, columnId: string) => {
   selectedTask.value = task;
+  selectedColumnId.value = columnId;
   editTaskModal.value = true;
 };
 
 const closeEditTask = () => {
   editTaskModal.value = false;
   selectedTask.value = null;
+  selectedColumnId.value = '';
 };
 
 </script>
